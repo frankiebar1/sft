@@ -310,35 +310,44 @@ def load_data() -> tuple[list[Income], list[RecurringExpense], list[OccasionalEx
 def calculate_total_income(income_list: list[Income], start_date: datetime.date, end_date: datetime.date) -> float:
     total = 0.0
     for item in income_list:
-        # For simplicity, count one-time income if its date is within the period.
-        # For recurring income, this logic would need to be more complex to count occurrences.
-        # Current Income class has 'frequency' but we're treating all as 'once' for this calculation if within period.
-        if start_date <= item.date <= end_date:
-            total += item.amount
-        # Basic handling for weekly/monthly if the main date is before or in the period
-        # This is a simplification and would need refinement for accuracy
-        elif item.frequency == "weekly" and item.date <= end_date:
-            # crude: count how many weeks from item.date to end_date if item.date is before start_date
-            current_date = item.date
-            while current_date <= end_date:
-                if current_date >= start_date:
-                     total += item.amount
-                current_date += datetime.timedelta(days=7)
-        elif item.frequency == "monthly" and item.date <= end_date:
-            current_month_date = item.date
-            while current_month_date <= end_date:
-                if current_month_date >= start_date:
-                    total += item.amount
-                # Move to next month
-                if current_month_date.month == 12:
-                    current_month_date = current_month_date.replace(year=current_month_date.year + 1, month=1)
-                else:
-                    current_month_date = current_month_date.replace(month=current_month_date.month + 1)
+        if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
+            # print(f"Warning: Skipping income item '{item.source}' due to None date in calculation period.")
+            continue
+
+        if item.frequency == "once":
+            if start_date <= item.date <= end_date:
+                total += item.amount
+        elif item.frequency == "weekly":
+            if item.date <= end_date: # Ensure the income starts before or during the period end
+                current_date = item.date
+                while current_date <= end_date:
+                    if current_date >= start_date:
+                        total += item.amount
+                    current_date += datetime.timedelta(days=7)
+        elif item.frequency == "monthly":
+            if item.date <= end_date: # Ensure the income starts before or during the period end
+                current_month_date = item.date
+                while current_month_date <= end_date:
+                    if current_month_date >= start_date:
+                        total += item.amount
+                    # Move to next month
+                    next_m, next_y = (current_month_date.month % 12) + 1, current_month_date.year + (current_month_date.month // 12)
+                    try:
+                        current_month_date = current_month_date.replace(year=next_y, month=next_m)
+                    except ValueError: # Handles day not in next month e.g. Jan 31 to Feb
+                        import calendar
+                        last_day_of_next_month = calendar.monthrange(next_y, next_m)[1]
+                        current_month_date = current_month_date.replace(year=next_y, month=next_m, day=last_day_of_next_month)
+
     return total
 
 def calculate_total_recurring_expenses(expense_list: list[RecurringExpense], start_date: datetime.date, end_date: datetime.date) -> float:
     total = 0.0
     for item in expense_list:
+        if not all([isinstance(d, datetime.date) for d in [item.start_date, start_date, end_date]]):
+            # print(f"Warning: Skipping recurring expense item '{item.description}' due to None date in calculation period.")
+            continue
+
         if item.start_date > end_date: # Expense starts after the period ends
             continue
 
@@ -374,6 +383,9 @@ def calculate_total_recurring_expenses(expense_list: list[RecurringExpense], sta
 def calculate_total_occasional_expenses(expense_list: list[OccasionalExpense], start_date: datetime.date, end_date: datetime.date) -> float:
     total = 0.0
     for item in expense_list:
+        if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
+            # print(f"Warning: Skipping occasional expense item '{item.description}' due to None date in calculation period.")
+            continue
         if start_date <= item.date <= end_date:
             total += item.amount
     return total
