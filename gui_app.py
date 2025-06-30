@@ -94,11 +94,11 @@ class FinancialTrackerApp(ctk.CTk):
         overview_frame.grid_columnconfigure(0, weight=1) # Allow label to expand
         ctk.CTkLabel(overview_frame, text="Monthly Overview", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=(5,10))
 
-        self.lbl_total_income = ctk.CTkLabel(overview_frame, text="Total Income: $0.00", font=ctk.CTkFont(size=14))
+        self.lbl_total_income = ctk.CTkLabel(overview_frame, text="Total Income: €0.00", font=ctk.CTkFont(size=14))
         self.lbl_total_income.pack(anchor="w", padx=10)
-        self.lbl_total_expenses = ctk.CTkLabel(overview_frame, text="Total Expenses: $0.00", font=ctk.CTkFont(size=14))
+        self.lbl_total_expenses = ctk.CTkLabel(overview_frame, text="Total Expenses: €0.00", font=ctk.CTkFont(size=14))
         self.lbl_total_expenses.pack(anchor="w", padx=10)
-        self.lbl_net_balance = ctk.CTkLabel(overview_frame, text="Net Balance: $0.00", font=ctk.CTkFont(size=14, weight="bold"))
+        self.lbl_net_balance = ctk.CTkLabel(overview_frame, text="Net Balance: €0.00", font=ctk.CTkFont(size=14, weight="bold"))
         self.lbl_net_balance.pack(anchor="w", padx=10, pady=(0,5))
 
         # Fixed Costs (Recurring Expenses) Section
@@ -130,6 +130,7 @@ class FinancialTrackerApp(ctk.CTk):
 
     def update_display(self):
         print("--- update_display START ---")
+        self.incomes, self.recurring_expenses, self.occasional_expenses = load_data()
         # 1. Getting the selected month/year
         try:
             print("Getting selected month/year...")
@@ -164,9 +165,9 @@ class FinancialTrackerApp(ctk.CTk):
         # 4. Update overview labels
         print("Updating overview labels...")
         try:
-            self.lbl_total_income.configure(text=f"Total Income: ${total_inc:.2f}")
-            self.lbl_total_expenses.configure(text=f"Total Expenses: ${total_exp:.2f}")
-            self.lbl_net_balance.configure(text=f"Net Balance: ${net_balance:.2f}")
+            self.lbl_total_income.configure(text=f"Total Income: €{total_inc:.2f}")
+            self.lbl_total_expenses.configure(text=f"Total Expenses: €{total_exp:.2f}")
+            self.lbl_net_balance.configure(text=f"Net Balance: €{net_balance:.2f}")
             print("Overview labels updated.")
         except Exception as e:
             print(f"ERROR updating overview labels: {e}")
@@ -177,16 +178,18 @@ class FinancialTrackerApp(ctk.CTk):
         try:
             self.fixed_costs_text.configure(state="normal")
             self.fixed_costs_text.delete("1.0", "end")
-            fixed_costs_header = f"{'Description':<30} {'Amount':>10} {'Frequency':>10} {'Tags'}\n"
+            fixed_costs_header = f"{'Description':<28} {'Amount (€)':>14} {'Frequency':>14} {'Tags':>20}\n"
             fixed_costs_header += "-" * (len(fixed_costs_header) -1) + "\n"
             self.fixed_costs_text.insert("end", fixed_costs_header)
             for item in self.recurring_expenses:
                 if not isinstance(item.start_date, datetime.date) or not isinstance(end_date, datetime.date):
-                    # print(f"Warning: Skipping display of recurring expense '{item.description}' due to None date.")
                     continue
                 if item.start_date <= end_date:
                     formatted_tags = ", ".join(item.tags) if item.tags else "None"
-                    self.fixed_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {item.frequency:>10} {formatted_tags}\n")
+                    self.fixed_costs_text.insert(
+                        "end",
+                        f"{item.description:<28} {'€':>3}{item.amount:>10.2f} {item.frequency:>14} {formatted_tags:>20}\n"
+                    )
             self.fixed_costs_text.configure(state="disabled")
             print("fixed_costs_text updated.")
         except Exception as e:
@@ -199,16 +202,18 @@ class FinancialTrackerApp(ctk.CTk):
         try:
             self.variable_costs_text.configure(state="normal")
             self.variable_costs_text.delete("1.0", "end")
-            variable_costs_header = f"{'Description':<30} {'Amount':>10} {'Date':>12} {'Tags'}\n"
+            variable_costs_header = f"{'Description':<28} {'Amount (€)':>14} {'Date':>14} {'Tags':>20}\n"
             variable_costs_header += "-" * (len(variable_costs_header) -1) + "\n"
             self.variable_costs_text.insert("end", variable_costs_header)
             for item in self.occasional_expenses:
                 if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
-                    # print(f"Warning: Skipping display of occasional expense '{item.description}' due to None date.")
                     continue
                 if start_date <= item.date <= end_date:
                     formatted_tags = ", ".join(item.tags) if item.tags else "None"
-                    self.variable_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {str(item.date):>12} {formatted_tags}\n")
+                    self.variable_costs_text.insert(
+                        "end",
+                        f"{item.description:<28} {'€':>3}{item.amount:>10.2f} {str(item.date):>14} {formatted_tags:>20}\n"
+                    )
             self.variable_costs_text.configure(state="disabled")
             print("variable_costs_text updated.")
         except Exception as e:
@@ -264,7 +269,7 @@ class FinancialTrackerApp(ctk.CTk):
                 tag_header += "-" * (len(tag_header)-1) + "\n"
                 self.tag_stats_text.insert("end", tag_header)
                 for tag, total in sorted(tag_spending.items()):
-                    self.tag_stats_text.insert("end", f"{tag:<20} ${total:>14.2f}\n")
+                    self.tag_stats_text.insert("end", f"{tag:<20} €{total:>14.2f}\n")
             else:
                 self.tag_stats_text.insert("end", "No tagged expenses this month.")
             self.tag_stats_text.configure(state="disabled")
@@ -576,4 +581,4 @@ if __name__ == "__main__":
     app = FinancialTrackerApp()
     app.after(100, app.update_display) # Call update_display shortly after app starts
     app.mainloop()
-```
+

@@ -14,10 +14,10 @@ class Income:
         self.frequency = frequency # e.g., "once", "weekly", "monthly"
 
     def __str__(self):
-        return f"Income: {self.source}, Amount: ${self.amount:.2f}, Date: {self.date}, Frequency: {self.frequency}"
+        return f"Income: {self.source}, Amount: €{self.amount:.2f}, Date: {self.date}, Frequency: {self.frequency}"
 
 class RecurringExpense:
-    def __init__(self, description: str, amount: float, frequency: str, start_date: datetime.date):
+    def __init__(self, description: str, amount: float, frequency: str, start_date: datetime.date, tags: list[str] | None = None):
         self.description = description
         self.amount = amount
         self.frequency = frequency # e.g., "weekly", "monthly", "annually"
@@ -25,17 +25,17 @@ class RecurringExpense:
         self.tags: list[str] = tags if tags is not None else []
 
     def __str__(self):
-        return f"Recurring Expense: {self.description}, Amount: ${self.amount:.2f}, Frequency: {self.frequency}, Starts: {self.start_date}, Tags: {self.tags}"
+        return f"Recurring Expense: {self.description}, Amount: €{self.amount:.2f}, Frequency: {self.frequency}, Starts: {self.start_date}, Tags: {self.tags}"
 
 class OccasionalExpense:
-    def __init__(self, description: str, amount: float, date: datetime.date, tags: list[str] | None = None):
+    def __init__(self, description: str, amount: float, date: datetime.date, tags: list[str] = None):
         self.description = description
         self.amount = amount
         self.date = date
         self.tags: list[str] = tags if tags is not None else []
 
     def __str__(self):
-        return f"Occasional Expense: {self.description}, Amount: ${self.amount:.2f}, Date: {self.date}, Tags: {self.tags}"
+        return f"Occasional Expense: {self.description}, Amount: €{self.amount:.2f}, Date: {self.date}, Tags: {self.tags}"
 
 def main():
     # This main function will eventually be replaced by the GUI application setup
@@ -77,11 +77,11 @@ def main():
     total_occ_exp = calculate_total_occasional_expenses(occasional_expenses, start_period, end_period)
     net_balance = total_inc - total_rec_exp - total_occ_exp
 
-    print(f"Total Income ({start_period} to {end_period}): ${total_inc:.2f}")
-    print(f"Total Recurring Expenses ({start_period} to {end_period}): ${total_rec_exp:.2f}")
-    print(f"Total Occasional Expenses ({start_period} to {end_period}): ${total_occ_exp:.2f}")
+    print(f"Total Income ({start_period} to {end_period}): €{total_inc:.2f}")
+    print(f"Total Recurring Expenses ({start_period} to {end_period}): €{total_rec_exp:.2f}")
+    print(f"Total Occasional Expenses ({start_period} to {end_period}): €{total_occ_exp:.2f}")
     # CLI interaction will replace direct calls here
-    # print(f"Net Balance ({start_period} to {end_period}): ${net_balance:.2f}")
+    # print(f"Net Balance ({start_period} to {end_period}): €{net_balance:.2f}")
 
     # Load data at startup
     incomes, recurring_expenses, occasional_expenses = load_data()
@@ -218,10 +218,10 @@ def view_monthly_summary_cli(incomes: list[Income], recurring_expenses: list[Rec
     total_occ_exp = calculate_total_occasional_expenses(occasional_expenses, start_period, end_period)
     net_balance = total_inc - total_rec_exp - total_occ_exp
 
-    print(f"Total Income: ${total_inc:.2f}")
-    print(f"Total Recurring Expenses: ${total_rec_exp:.2f}")
-    print(f"Total Occasional Expenses: ${total_occ_exp:.2f}")
-    print(f"Net Balance: ${net_balance:.2f}")
+    print(f"Total Income: €{total_inc:.2f}")
+    print(f"Total Recurring Expenses: €{total_rec_exp:.2f}")
+    print(f"Total Occasional Expenses: €{total_occ_exp:.2f}")
+    print(f"Net Balance: €{net_balance:.2f}")
 
 
 # --- Functions to add items (kept for potential direct use/testing, CLI functions wrap them) ---
