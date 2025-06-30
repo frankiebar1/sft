@@ -168,6 +168,9 @@ class FinancialTrackerApp(ctk.CTk):
             self.lbl_total_income.configure(text=f"Total Income: €{total_inc:.2f}")
             self.lbl_total_expenses.configure(text=f"Total Expenses: €{total_exp:.2f}")
             self.lbl_net_balance.configure(text=f"Net Balance: €{net_balance:.2f}")
+            self.lbl_total_income.configure(text=f"Total Income: €{total_inc:.2f}")
+            self.lbl_total_expenses.configure(text=f"Total Expenses: €{total_exp:.2f}")
+            self.lbl_net_balance.configure(text=f"Net Balance: €{net_balance:.2f}")
             print("Overview labels updated.")
         except Exception as e:
             print(f"ERROR updating overview labels: {e}")
@@ -269,6 +272,7 @@ class FinancialTrackerApp(ctk.CTk):
                 tag_header += "-" * (len(tag_header)-1) + "\n"
                 self.tag_stats_text.insert("end", tag_header)
                 for tag, total in sorted(tag_spending.items()):
+                    self.tag_stats_text.insert("end", f"{tag:<20} €{total:>14.2f}\n")
                     self.tag_stats_text.insert("end", f"{tag:<20} €{total:>14.2f}\n")
             else:
                 self.tag_stats_text.insert("end", "No tagged expenses this month.")
