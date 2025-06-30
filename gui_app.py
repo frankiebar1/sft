@@ -2,6 +2,7 @@ import customtkinter as ctk
 import datetime
 import calendar # For monthrange
 from collections import defaultdict
+import traceback # For detailed error logging
 
 # Assuming financial_tracker.py is in the same directory
 from financial_tracker import (
@@ -128,8 +129,10 @@ class FinancialTrackerApp(ctk.CTk):
         pass
 
     def update_display(self):
+        print("--- update_display START ---")
         # 1. Getting the selected month/year
         try:
+            print("Getting selected month/year...")
             selected_month_str = self.month_var.get()
             selected_year_str = self.year_var.get()
 
@@ -159,92 +162,120 @@ class FinancialTrackerApp(ctk.CTk):
         net_balance = total_inc - total_exp
 
         # 4. Update overview labels
-        self.lbl_total_income.configure(text=f"Total Income: ${total_inc:.2f}")
-        self.lbl_total_expenses.configure(text=f"Total Expenses: ${total_exp:.2f}")
-        self.lbl_net_balance.configure(text=f"Net Balance: ${net_balance:.2f}")
+        print("Updating overview labels...")
+        try:
+            self.lbl_total_income.configure(text=f"Total Income: ${total_inc:.2f}")
+            self.lbl_total_expenses.configure(text=f"Total Expenses: ${total_exp:.2f}")
+            self.lbl_net_balance.configure(text=f"Net Balance: ${net_balance:.2f}")
+            print("Overview labels updated.")
+        except Exception as e:
+            print(f"ERROR updating overview labels: {e}")
+            traceback.print_exc()
 
         # 5. Populate Fixed Costs (Recurring Expenses) Textbox
-        self.fixed_costs_text.configure(state="normal")
-        self.fixed_costs_text.delete("1.0", "end")
-        fixed_costs_header = f"{'Description':<30} {'Amount':>10} {'Frequency':>10} {'Tags'}\n"
-        fixed_costs_header += "-" * (len(fixed_costs_header) -1) + "\n"
-        self.fixed_costs_text.insert("end", fixed_costs_header)
-        for item in self.recurring_expenses:
-            if not isinstance(item.start_date, datetime.date) or not isinstance(end_date, datetime.date):
-                # print(f"Warning: Skipping display of recurring expense '{item.description}' due to None date.")
-                continue
-            if item.start_date <= end_date:
-                formatted_tags = ", ".join(item.tags) if item.tags else "None"
-                self.fixed_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {item.frequency:>10} {formatted_tags}\n")
-        self.fixed_costs_text.configure(state="disabled")
+        print("Updating fixed_costs_text...")
+        try:
+            self.fixed_costs_text.configure(state="normal")
+            self.fixed_costs_text.delete("1.0", "end")
+            fixed_costs_header = f"{'Description':<30} {'Amount':>10} {'Frequency':>10} {'Tags'}\n"
+            fixed_costs_header += "-" * (len(fixed_costs_header) -1) + "\n"
+            self.fixed_costs_text.insert("end", fixed_costs_header)
+            for item in self.recurring_expenses:
+                if not isinstance(item.start_date, datetime.date) or not isinstance(end_date, datetime.date):
+                    # print(f"Warning: Skipping display of recurring expense '{item.description}' due to None date.")
+                    continue
+                if item.start_date <= end_date:
+                    formatted_tags = ", ".join(item.tags) if item.tags else "None"
+                    self.fixed_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {item.frequency:>10} {formatted_tags}\n")
+            self.fixed_costs_text.configure(state="disabled")
+            print("fixed_costs_text updated.")
+        except Exception as e:
+            print(f"ERROR updating fixed_costs_text: {e}")
+            traceback.print_exc()
+            if hasattr(self, 'fixed_costs_text'): self.fixed_costs_text.configure(state="disabled")
 
         # 6. Populate Variable Costs (Occasional Expenses) Textbox
-        self.variable_costs_text.configure(state="normal")
-        self.variable_costs_text.delete("1.0", "end")
-        variable_costs_header = f"{'Description':<30} {'Amount':>10} {'Date':>12} {'Tags'}\n"
-        variable_costs_header += "-" * (len(variable_costs_header) -1) + "\n"
-        self.variable_costs_text.insert("end", variable_costs_header)
-        for item in self.occasional_expenses:
-            if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
-                # print(f"Warning: Skipping display of occasional expense '{item.description}' due to None date.")
-                continue
-            if start_date <= item.date <= end_date:
-                formatted_tags = ", ".join(item.tags) if item.tags else "None"
-                self.variable_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {str(item.date):>12} {formatted_tags}\n")
-        self.variable_costs_text.configure(state="disabled")
+        print("Updating variable_costs_text...")
+        try:
+            self.variable_costs_text.configure(state="normal")
+            self.variable_costs_text.delete("1.0", "end")
+            variable_costs_header = f"{'Description':<30} {'Amount':>10} {'Date':>12} {'Tags'}\n"
+            variable_costs_header += "-" * (len(variable_costs_header) -1) + "\n"
+            self.variable_costs_text.insert("end", variable_costs_header)
+            for item in self.occasional_expenses:
+                if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
+                    # print(f"Warning: Skipping display of occasional expense '{item.description}' due to None date.")
+                    continue
+                if start_date <= item.date <= end_date:
+                    formatted_tags = ", ".join(item.tags) if item.tags else "None"
+                    self.variable_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {str(item.date):>12} {formatted_tags}\n")
+            self.variable_costs_text.configure(state="disabled")
+            print("variable_costs_text updated.")
+        except Exception as e:
+            print(f"ERROR updating variable_costs_text: {e}")
+            traceback.print_exc()
+            if hasattr(self, 'variable_costs_text'): self.variable_costs_text.configure(state="disabled")
 
         # 7. Populate Tag-Based Statistics Textbox
-        tag_spending = defaultdict(float)
+        print("Updating tag_stats_text...")
+        try:
+            tag_spending = defaultdict(float)
 
-        # Recurring expenses for tag aggregation
-        for item in self.recurring_expenses:
-            if not all([isinstance(d, datetime.date) for d in [item.start_date, start_date, end_date]]):
-                # print(f"Warning: Skipping tag aggregation for recurring expense '{item.description}' due to None date.")
-                continue
+            # Recurring expenses for tag aggregation
+            for item in self.recurring_expenses:
+                if not all([isinstance(d, datetime.date) for d in [item.start_date, start_date, end_date]]):
+                    # print(f"Warning: Skipping tag aggregation for recurring expense '{item.description}' due to None date.")
+                    continue
 
-            current_payment_date = item.start_date
-            while current_payment_date <= end_date:
-                if current_payment_date >= start_date:
+                current_payment_date = item.start_date
+                while current_payment_date <= end_date:
+                    if current_payment_date >= start_date:
+                        for tag in item.tags:
+                            tag_spending[tag] += item.amount
+
+                    if item.frequency == "weekly": current_payment_date += datetime.timedelta(days=7)
+                    elif item.frequency == "monthly":
+                        next_m, next_y = (current_payment_date.month % 12) + 1, current_payment_date.year + (current_payment_date.month // 12)
+                        try: current_payment_date = current_payment_date.replace(year=next_y, month=next_m)
+                        except ValueError:
+                            last_day = calendar.monthrange(next_y, next_m)[1]
+                            current_payment_date = current_payment_date.replace(year=next_y, month=next_m, day=last_day)
+                    elif item.frequency == "annually":
+                        try: current_payment_date = current_payment_date.replace(year=current_payment_date.year + 1)
+                        except ValueError:
+                            current_payment_date = current_payment_date.replace(year=current_payment_date.year + 1, day=28)
+                    else: break
+                    if current_payment_date > end_date and item.start_date < current_payment_date :
+                         break
+
+            # Occasional expenses for tag aggregation
+            for item in self.occasional_expenses:
+                if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
+                    # print(f"Warning: Skipping tag aggregation for occasional expense '{item.description}' due to None date.")
+                    continue
+                if start_date <= item.date <= end_date:
                     for tag in item.tags:
                         tag_spending[tag] += item.amount
 
-                if item.frequency == "weekly": current_payment_date += datetime.timedelta(days=7)
-                elif item.frequency == "monthly":
-                    next_m, next_y = (current_payment_date.month % 12) + 1, current_payment_date.year + (current_payment_date.month // 12)
-                    try: current_payment_date = current_payment_date.replace(year=next_y, month=next_m)
-                    except ValueError:
-                        last_day = calendar.monthrange(next_y, next_m)[1]
-                        current_payment_date = current_payment_date.replace(year=next_y, month=next_m, day=last_day)
-                elif item.frequency == "annually":
-                    try: current_payment_date = current_payment_date.replace(year=current_payment_date.year + 1)
-                    except ValueError:
-                        current_payment_date = current_payment_date.replace(year=current_payment_date.year + 1, day=28)
-                else: break
-                if current_payment_date > end_date and item.start_date < current_payment_date :
-                     break
-
-        # Occasional expenses for tag aggregation
-        for item in self.occasional_expenses:
-            if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
-                # print(f"Warning: Skipping tag aggregation for occasional expense '{item.description}' due to None date.")
-                continue
-            if start_date <= item.date <= end_date:
-                for tag in item.tags:
-                    tag_spending[tag] += item.amount
-
-        self.tag_stats_text.configure(state="normal")
-        self.tag_stats_text.delete("1.0", "end")
-        if tag_spending:
-            tag_header = f"{'Tag':<20} {'Total Spent':>15}\n"
-            tag_header += "-" * (len(tag_header)-1) + "\n"
-            self.tag_stats_text.insert("end", tag_header)
-            for tag, total in sorted(tag_spending.items()):
-                self.tag_stats_text.insert("end", f"{tag:<20} ${total:>14.2f}\n")
-        else:
-            self.tag_stats_text.insert("end", "No tagged expenses this month.")
-        self.tag_stats_text.configure(state="disabled")
+            self.tag_stats_text.configure(state="normal")
+            self.tag_stats_text.delete("1.0", "end")
+            if tag_spending:
+                tag_header = f"{'Tag':<20} {'Total Spent':>15}\n"
+                tag_header += "-" * (len(tag_header)-1) + "\n"
+                self.tag_stats_text.insert("end", tag_header)
+                for tag, total in sorted(tag_spending.items()):
+                    self.tag_stats_text.insert("end", f"{tag:<20} ${total:>14.2f}\n")
+            else:
+                self.tag_stats_text.insert("end", "No tagged expenses this month.")
+            self.tag_stats_text.configure(state="disabled")
+            print("tag_stats_text updated.")
+        except Exception as e:
+            print(f"ERROR updating tag_stats_text: {e}")
+            traceback.print_exc()
+            if hasattr(self, 'tag_stats_text'): self.tag_stats_text.configure(state="disabled")
 
         print(f"Display updated for {selected_month_str} {selected_year_str} with real data.")
+        print("--- update_display END ---")
 
     def save_and_refresh(self):
         """Saves all data and refreshes the main display."""
