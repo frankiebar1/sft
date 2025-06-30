@@ -130,6 +130,11 @@ class FinancialTrackerApp(ctk.CTk):
 
     def update_display(self):
         print("--- update_display START ---")
+
+        # TEMPORARY DEBUG: Force reload from disk
+        print("DEBUG: Forcing reload of data from disk in update_display")
+        self.incomes, self.recurring_expenses, self.occasional_expenses = load_data()
+
         # 1. Getting the selected month/year
         try:
             print("Getting selected month/year...")
@@ -164,9 +169,9 @@ class FinancialTrackerApp(ctk.CTk):
         # 4. Update overview labels
         print("Updating overview labels...")
         try:
-            self.lbl_total_income.configure(text=f"Total Income: ${total_inc:.2f}")
-            self.lbl_total_expenses.configure(text=f"Total Expenses: ${total_exp:.2f}")
-            self.lbl_net_balance.configure(text=f"Net Balance: ${net_balance:.2f}")
+            self.lbl_total_income.configure(text=f"Total Income: €{total_inc:.2f}")
+            self.lbl_total_expenses.configure(text=f"Total Expenses: €{total_exp:.2f}")
+            self.lbl_net_balance.configure(text=f"Net Balance: €{net_balance:.2f}")
             print("Overview labels updated.")
         except Exception as e:
             print(f"ERROR updating overview labels: {e}")
@@ -186,7 +191,7 @@ class FinancialTrackerApp(ctk.CTk):
                     continue
                 if item.start_date <= end_date:
                     formatted_tags = ", ".join(item.tags) if item.tags else "None"
-                    self.fixed_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {item.frequency:>10} {formatted_tags}\n")
+                    self.fixed_costs_text.insert("end", f"{item.description:<30} €{item.amount:>9.2f} {item.frequency:>10} {formatted_tags}\n")
             self.fixed_costs_text.configure(state="disabled")
             print("fixed_costs_text updated.")
         except Exception as e:
@@ -208,7 +213,7 @@ class FinancialTrackerApp(ctk.CTk):
                     continue
                 if start_date <= item.date <= end_date:
                     formatted_tags = ", ".join(item.tags) if item.tags else "None"
-                    self.variable_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {str(item.date):>12} {formatted_tags}\n")
+                    self.variable_costs_text.insert("end", f"{item.description:<30} €{item.amount:>9.2f} {str(item.date):>12} {formatted_tags}\n")
             self.variable_costs_text.configure(state="disabled")
             print("variable_costs_text updated.")
         except Exception as e:
@@ -264,7 +269,7 @@ class FinancialTrackerApp(ctk.CTk):
                 tag_header += "-" * (len(tag_header)-1) + "\n"
                 self.tag_stats_text.insert("end", tag_header)
                 for tag, total in sorted(tag_spending.items()):
-                    self.tag_stats_text.insert("end", f"{tag:<20} ${total:>14.2f}\n")
+                    self.tag_stats_text.insert("end", f"{tag:<20} €{total:>14.2f}\n")
             else:
                 self.tag_stats_text.insert("end", "No tagged expenses this month.")
             self.tag_stats_text.configure(state="disabled")
