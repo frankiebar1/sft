@@ -14,7 +14,7 @@ class Income:
         self.frequency = frequency # e.g., "once", "weekly", "monthly"
 
     def __str__(self):
-        return f"Income: {self.source}, Amount: ${self.amount:.2f}, Date: {self.date}, Frequency: {self.frequency}"
+        return f"Income: {self.source}, Amount: €{self.amount:.2f}, Date: {self.date}, Frequency: {self.frequency}"
 
 class RecurringExpense:
     def __init__(self, description: str, amount: float, frequency: str, start_date: datetime.date):
@@ -25,7 +25,7 @@ class RecurringExpense:
         self.tags: list[str] = tags if tags is not None else []
 
     def __str__(self):
-        return f"Recurring Expense: {self.description}, Amount: ${self.amount:.2f}, Frequency: {self.frequency}, Starts: {self.start_date}, Tags: {self.tags}"
+        return f"Recurring Expense: {self.description}, Amount: €{self.amount:.2f}, Frequency: {self.frequency}, Starts: {self.start_date}, Tags: {self.tags}"
 
 class OccasionalExpense:
     def __init__(self, description: str, amount: float, date: datetime.date, tags: list[str] | None = None):
@@ -35,7 +35,7 @@ class OccasionalExpense:
         self.tags: list[str] = tags if tags is not None else []
 
     def __str__(self):
-        return f"Occasional Expense: {self.description}, Amount: ${self.amount:.2f}, Date: {self.date}, Tags: {self.tags}"
+        return f"Occasional Expense: {self.description}, Amount: €{self.amount:.2f}, Date: {self.date}, Tags: {self.tags}"
 
 def main():
     # This main function will eventually be replaced by the GUI application setup
