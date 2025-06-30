@@ -22,20 +22,23 @@ class RecurringExpense:
         self.amount = amount
         self.frequency = frequency # e.g., "weekly", "monthly", "annually"
         self.start_date = start_date
+        self.tags: list[str] = tags if tags is not None else []
 
     def __str__(self):
-        return f"Recurring Expense: {self.description}, Amount: ${self.amount:.2f}, Frequency: {self.frequency}, Starts: {self.start_date}"
+        return f"Recurring Expense: {self.description}, Amount: ${self.amount:.2f}, Frequency: {self.frequency}, Starts: {self.start_date}, Tags: {self.tags}"
 
 class OccasionalExpense:
-    def __init__(self, description: str, amount: float, date: datetime.date):
+    def __init__(self, description: str, amount: float, date: datetime.date, tags: list[str] | None = None):
         self.description = description
         self.amount = amount
         self.date = date
+        self.tags: list[str] = tags if tags is not None else []
 
     def __str__(self):
-        return f"Occasional Expense: {self.description}, Amount: ${self.amount:.2f}, Date: {self.date}"
+        return f"Occasional Expense: {self.description}, Amount: ${self.amount:.2f}, Date: {self.date}, Tags: {self.tags}"
 
 def main():
+    # This main function will eventually be replaced by the GUI application setup
     print("Welcome to the Student Financial Tracker!")
 
     # Example usage (we'll build out the CLI later)
@@ -162,10 +165,13 @@ def add_recurring_expense_cli(expense_list: list[RecurringExpense]):
     if not start_date_obj:
         return
 
-    expense_item = RecurringExpense(description, amount, frequency, start_date_obj)
-    expense_list.append(expense_item)
+    tags_str = input("Enter tags (comma-separated, e.g., food,utility): ")
+    tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
+
+    # Call the core function, which now accepts tags
+    expense_item = RecurringExpense(description, amount, frequency, start_date_obj, tags=tags)
+    expense_list.append(expense_item) # Appending is technically done in add_recurring_expense_item, but good to be explicit if that changes
     print(f"Added: {expense_item}")
-    # save_data(*all_data) # Will be called from main loop
 
 def add_occasional_expense_cli(expense_list: list[OccasionalExpense]):
     print("\n--- Add Occasional Expense ---")
@@ -180,10 +186,13 @@ def add_occasional_expense_cli(expense_list: list[OccasionalExpense]):
     if not date_obj:
         return
 
-    expense_item = OccasionalExpense(description, amount, date_obj)
-    expense_list.append(expense_item)
+    tags_str = input("Enter tags (comma-separated, e.g., books,entertainment): ")
+    tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()] if tags_str else []
+
+    # Call the core function, which now accepts tags
+    expense_item = OccasionalExpense(description, amount, date_obj, tags=tags)
+    expense_list.append(expense_item) # Appending is technically done in add_occasional_expense_item
     print(f"Added: {expense_item}")
-    # save_data(*all_data) # will be called from main
 
 def view_monthly_summary_cli(incomes: list[Income], recurring_expenses: list[RecurringExpense], occasional_expenses: list[OccasionalExpense]):
     print("\n--- View Monthly Summary ---")
@@ -228,18 +237,16 @@ def add_income_item(income_list: list, source: str, amount: float, date_obj: dat
     # print(f"Added: {income_item}") # Logging moved to CLI functions
     return income_item
 
-def add_recurring_expense_item(expense_list: list, description: str, amount: float, frequency: str, start_date_obj: datetime.date) -> RecurringExpense:
+def add_recurring_expense_item(expense_list: list, description: str, amount: float, frequency: str, start_date_obj: datetime.date, tags: list[str] | None = None) -> RecurringExpense:
     """Adds a recurring expense item to the provided list."""
-    # start_date_obj = parse_date(start_date_str)
-    expense_item = RecurringExpense(description, amount, frequency, start_date_obj)
+    expense_item = RecurringExpense(description, amount, frequency, start_date_obj, tags=tags)
     expense_list.append(expense_item)
     # print(f"Added: {expense_item}")
     return expense_item
 
-def add_occasional_expense_item(expense_list: list, description: str, amount: float, date_obj: datetime.date) -> OccasionalExpense:
+def add_occasional_expense_item(expense_list: list, description: str, amount: float, date_obj: datetime.date, tags: list[str] | None = None) -> OccasionalExpense:
     """Adds an occasional expense item to the provided list."""
-    # date_obj = parse_date(date_str)
-    expense_item = OccasionalExpense(description, amount, date_obj)
+    expense_item = OccasionalExpense(description, amount, date_obj, tags=tags)
     expense_list.append(expense_item)
     # print(f"Added: {expense_item}")
     return expense_item
@@ -280,10 +287,14 @@ def load_data() -> tuple[list[Income], list[RecurringExpense], list[OccasionalEx
 
         for item_data in data_loaded.get("recurring_expenses", []):
             item_data['start_date'] = datetime.date.fromisoformat(item_data['start_date'])
+            # Ensure 'tags' key exists, defaulting to empty list if not (for backward compatibility)
+            item_data.setdefault('tags', [])
             recurring_expenses.append(RecurringExpense(**item_data))
 
         for item_data in data_loaded.get("occasional_expenses", []):
             item_data['date'] = datetime.date.fromisoformat(item_data['date'])
+            # Ensure 'tags' key exists, defaulting to empty list if not
+            item_data.setdefault('tags', [])
             occasional_expenses.append(OccasionalExpense(**item_data))
 
         print(f"Data loaded from {DATA_FILE}")
