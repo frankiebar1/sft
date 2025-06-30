@@ -170,12 +170,10 @@ class FinancialTrackerApp(ctk.CTk):
         fixed_costs_header += "-" * (len(fixed_costs_header) -1) + "\n"
         self.fixed_costs_text.insert("end", fixed_costs_header)
         for item in self.recurring_expenses:
-            # Check if the recurring item is active in the selected period (simplified check)
-            # A more precise check would be to see if at least one payment instance falls in the month
-            if item.start_date <= end_date: # Basic check: started before or during the month
-                # More accurate: does it actually have a payment in this month?
-                # This is implicitly handled by calculate_total_recurring_expenses, but for display list, we need to be sure.
-                # For now, list if it *could* be active.
+            if not isinstance(item.start_date, datetime.date) or not isinstance(end_date, datetime.date):
+                # print(f"Warning: Skipping display of recurring expense '{item.description}' due to None date.")
+                continue
+            if item.start_date <= end_date:
                 formatted_tags = ", ".join(item.tags) if item.tags else "None"
                 self.fixed_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {item.frequency:>10} {formatted_tags}\n")
         self.fixed_costs_text.configure(state="disabled")
@@ -187,6 +185,9 @@ class FinancialTrackerApp(ctk.CTk):
         variable_costs_header += "-" * (len(variable_costs_header) -1) + "\n"
         self.variable_costs_text.insert("end", variable_costs_header)
         for item in self.occasional_expenses:
+            if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
+                # print(f"Warning: Skipping display of occasional expense '{item.description}' due to None date.")
+                continue
             if start_date <= item.date <= end_date:
                 formatted_tags = ", ".join(item.tags) if item.tags else "None"
                 self.variable_costs_text.insert("end", f"{item.description:<30} ${item.amount:>9.2f} {str(item.date):>12} {formatted_tags}\n")
@@ -194,15 +195,16 @@ class FinancialTrackerApp(ctk.CTk):
 
         # 7. Populate Tag-Based Statistics Textbox
         tag_spending = defaultdict(float)
-        # Consider recurring expenses active in the month
+
+        # Recurring expenses for tag aggregation
         for item in self.recurring_expenses:
-            # This is a simplification: it adds the full amount if the expense *could* occur.
-            # A more accurate tag spending would be to sum actual occurrences in the month.
-            # For now, we'll use the logic similar to how calculate_total_recurring_expenses works.
+            if not all([isinstance(d, datetime.date) for d in [item.start_date, start_date, end_date]]):
+                # print(f"Warning: Skipping tag aggregation for recurring expense '{item.description}' due to None date.")
+                continue
 
             current_payment_date = item.start_date
             while current_payment_date <= end_date:
-                if current_payment_date >= start_date: # Payment occurs within the period
+                if current_payment_date >= start_date:
                     for tag in item.tags:
                         tag_spending[tag] += item.amount
 
@@ -210,19 +212,22 @@ class FinancialTrackerApp(ctk.CTk):
                 elif item.frequency == "monthly":
                     next_m, next_y = (current_payment_date.month % 12) + 1, current_payment_date.year + (current_payment_date.month // 12)
                     try: current_payment_date = current_payment_date.replace(year=next_y, month=next_m)
-                    except ValueError: # handle day not in next month e.g. Jan 31 to Feb
+                    except ValueError:
                         last_day = calendar.monthrange(next_y, next_m)[1]
                         current_payment_date = current_payment_date.replace(year=next_y, month=next_m, day=last_day)
                 elif item.frequency == "annually":
                     try: current_payment_date = current_payment_date.replace(year=current_payment_date.year + 1)
-                    except ValueError: # Feb 29 on leap year
+                    except ValueError:
                         current_payment_date = current_payment_date.replace(year=current_payment_date.year + 1, day=28)
-                else: break # unknown frequency
-                if current_payment_date > end_date and item.start_date < current_payment_date : # Optimization: if next payment is past period end, stop.
+                else: break
+                if current_payment_date > end_date and item.start_date < current_payment_date :
                      break
 
-
+        # Occasional expenses for tag aggregation
         for item in self.occasional_expenses:
+            if not all([isinstance(d, datetime.date) for d in [item.date, start_date, end_date]]):
+                # print(f"Warning: Skipping tag aggregation for occasional expense '{item.description}' due to None date.")
+                continue
             if start_date <= item.date <= end_date:
                 for tag in item.tags:
                     tag_spending[tag] += item.amount
